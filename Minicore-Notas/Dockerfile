@@ -1,33 +1,28 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+﻿# Etapa de compilación
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
-WORKDIR /src
+# Establece un directorio de trabajo neutral fuera del árbol del código fuente
+WORKDIR /app
 
-# Copia solo el .csproj para restaurar dependencias primero (más cacheable)
-COPY ["Minicore-Notas/Minicore-Notas.csproj", "Minicore-Notas/"]
-
-# Establece el directorio de trabajo dentro del proyecto
-WORKDIR /src/Minicore-Notas
+# Copia solo el archivo .csproj para restaurar dependencias primero
+COPY Minicore-Notas/Minicore-Notas.csproj ./Minicore-Notas/
 
 # Restaura paquetes NuGet
-RUN dotnet restore "Minicore-Notas.csproj"
+RUN dotnet restore ./Minicore-Notas/Minicore-Notas.csproj
 
-# Copia el resto de los archivos del proyecto
-COPY . .
+# Copia el resto del código fuente
+COPY Minicore-Notas/ ./Minicore-Notas/
 
-# Limpia carpetas temporales para evitar errores de acceso
-RUN rm -rf bin/ obj/
+# Publica en una carpeta aislada para evitar problemas de acceso
+RUN dotnet publish ./Minicore-Notas/Minicore-Notas.csproj -c Release -o /out --no-restore
 
-# Publica la app en modo Release en una carpeta fuera de bin/ para evitar conflictos
-RUN dotnet publish "Minicore-Notas.csproj" -c Release -o /app/out
-
-# Imagen de runtime
+# Etapa de runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 WORKDIR /app
 
-# Copia los archivos publicados desde la fase de build
-COPY --from=build /app/out .
+# Copia los archivos publicados
+COPY --from=build /out .
 
-# Define el punto de entrada de la app
+# Define el punto de entrada
 ENTRYPOINT ["dotnet", "Minicore-Notas.dll"]
-

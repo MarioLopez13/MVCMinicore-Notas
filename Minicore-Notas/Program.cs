@@ -13,7 +13,6 @@ namespace Minicore_Notas
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            // Cambiado para usar MySQL con Pomelo
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -22,7 +21,13 @@ namespace Minicore_Notas
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            //  Aplicar migraciones automáticamente al iniciar
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.Database.Migrate(); // Esto aplica todas las migraciones pendientes
+            }
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");

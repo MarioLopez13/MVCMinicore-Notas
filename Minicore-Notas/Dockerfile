@@ -1,7 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["Minicore_Notas/Minicore-Notas.csproj", "Minicore_Notas/"]
-WORKDIR /src/Minicore_Notas
+COPY ["Minicore-Notas.csproj", "./"]
 RUN dotnet restore "Minicore-Notas.csproj"
 COPY . .
 RUN dotnet publish "Minicore-Notas.csproj" -c Release -o /app/out
